@@ -19,23 +19,25 @@ async def check_website():
     except requests.ConnectionError:
         return "Website is DOWN. Connection error."
 
-async def check_server():
-    try:
-        response = requests.get(f'http://{SERVER_IP}')
-        return f"Server is UP. Status code: {response.status_code}" if response.status_code == 200 else f"Server is DOWN. Status code: {response.status_code}"
-    except requests.ConnectionError:
-        return "Server is DOWN. Connection error."
+async def ping_server():
+    # Pinging the server using the OS ping command
+    response = os.system(f"ping -c 1 {SERVER_IP}")
+    
+    if response == 0:
+        return "Server is UP (Ping successful)."
+    else:
+        return "Server is DOWN (Ping failed)."
 
 async def send_status_update():
     website_status = await check_website()
-    server_status = await check_server()
+    server_status = await ping_server()
     message = f"Website Status: {website_status}\nServer Status: {server_status}"
     await bot.send_message(chat_id=CHAT_ID, text=message)
 
 async def main():
     while True:
         await send_status_update()
-        await asyncio.sleep(60 * 60)  # Check every hour
+        await asyncio.sleep(60 * 60 * 5)  # Check every 5 hours
 
 if __name__ == "__main__":
     asyncio.run(main())
